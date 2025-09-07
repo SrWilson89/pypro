@@ -29,7 +29,8 @@ def main():
     # El modelo 'codeparrot/codeparrot-small-multi' es mucho más potente para generar código.
     try:
         tokenizer = AutoTokenizer.from_pretrained("codeparrot/codeparrot-small-multi")
-        modelo = AutoModelForCausalLM.from_pretrained("codeparrot/codeparrot-small-multi")
+        # El parámetro 'device_map="auto"' requiere la librería 'accelerate'
+        modelo = AutoModelForCausalLM.from_pretrained("codeparrot/codeparrot-small-multi", device_map="auto")
     except Exception as e:
         print(f"Error al descargar el modelo o el tokenizador: {e}")
         print("\nPor favor, asegúrate de tener PyTorch o TensorFlow instalado.")
@@ -51,11 +52,7 @@ def fizzbuzz(n):
 
 # La IA debe completar esta función:
 def es_par(numero):
-    if numero % 2 == 0:
-        return True
-    else:
-        return False
-"""
+    """
     
     # 3. Convertir el texto en algo que la IA pueda entender
     input_ids = tokenizer.encode(prompt, return_tensors='pt')
@@ -63,7 +60,7 @@ def es_par(numero):
     # 4. Usar el "cerebro" para generar código
     output = modelo.generate(
         input_ids,
-        max_length=200,
+        max_length=150,
         num_return_sequences=1,
         pad_token_id=tokenizer.eos_token_id
     )
