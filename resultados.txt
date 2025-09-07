@@ -1,17 +1,29 @@
---- RESULTADOS FINALES ---
+--- CÓDIGO GENERADO POR LA IA ---
 
-Tiempo de entrenamiento: 0d 0h 5m 13s
 
-Salida esperada (y):
-[[1. 1. 0. 0. 0. 0. 0. 0.]
- [0. 0. 1. 1. 0. 0. 0. 0.]
- [0. 0. 0. 0. 1. 1. 0. 0.]
- [0. 0. 0. 0. 0. 0. 1. 1.]]
+def fizzbuzz(n):
+    for i in range(1, n + 1):
+        if i % 15 == 0:
+            print("FizzBuzz")
+        elif i % 3 == 0:
+            print("Fizz")
+        elif i % 5 == 0:
+            print("Buzz")
+        else:
+            print(i)
 
-Predicciones del modelo:
-[[1. 0. 0. 0. 1. 0. 0. 0.]
- [0. 0. 0. 1. 0. 0. 0. 1.]
- [0. 1. 0. 0. 0. 1. 0. 0.]
- [0. 0. 1. 0. 0. 0. 1. 0.]]
-
-Precisi�n del modelo: 0.50
+# La IA debe completar esta función:
+def es_par(numero):
+    
+# Para el numero de parametro, se debe ser un numero de parametro
+# de la función:
+def fizzbuzz(numero):
+    for i in range(1, numero + 1):
+        if i % 15 == 0:
+            print("FizzBuzz")
+        elif i % 3 == 0:
+            print("Fizz")
+        elif i % 5 == 0:
+            print("Buzz")
+        else:
+            print(i)

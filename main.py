@@ -1,8 +1,9 @@
 import numpy as np
-from red_neuronal import RedNeuronal
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
 import matplotlib.pyplot as plt
 import time
-import sys # Añadimos esta librería para saber qué sistema operativo estamos usando
 
 def guardar_resultados(ruta_archivo, salida_esperada, predicciones, precision, tiempo_total):
     """
@@ -20,86 +21,65 @@ def guardar_resultados(ruta_archivo, salida_esperada, predicciones, precision, t
         f.write(str(salida_esperada) + "\n\n")
         f.write("Predicciones del modelo:\n")
         f.write(str(predicciones) + "\n\n")
-        f.write(f"Precisión del modelo: {precision:.2f}\n")
+        f.write(f"Precisión del modelo: {precision * 100:.2f}%\n")
     print(f"\nResultados guardados en {ruta_archivo}")
 
-# Nueva función para reproducir un sonido
-def reproducir_sonido_finalizacion():
-    """
-    Reproduce un sonido suave para avisar que el proceso ha terminado.
-    """
-    print("Reproduciendo sonido de finalización...")
-    try:
-        if sys.platform == 'win32':
-            import winsound
-            winsound.Beep(440, 500)  # Frecuencia 440 Hz, duración 500 ms
-        elif sys.platform == 'darwin': # macOS
-            import os
-            os.system('say "El entrenamiento ha finalizado"')
-        else: # Linux y otros
-            import os
-            os.system('printf "\a"') # Sonido de campana
-    except Exception as e:
-        print(f"No se pudo reproducir el sonido: {e}")
-
 def main():
-    # --- 1. Definir la arquitectura de la red y los datos ---
-    tamano_capas = [2, 5, 4] 
-    activaciones = ["tanh", "softmax"] 
-    
+    # --- 1. Preparar los datos ---
     X = np.array([[0, 0, 1, 1, 0, 0, 1, 1],
                   [0, 1, 0, 1, 0, 1, 0, 1]])
     
-    y = np.array([[1, 1, 0, 0, 0, 0, 0, 0], 
-                  [0, 0, 1, 1, 0, 0, 0, 0], 
-                  [0, 0, 0, 0, 1, 1, 0, 0], 
-                  [0, 0, 0, 0, 0, 0, 1, 1]]).astype(np.float64) 
+    y = np.array([0, 0, 1, 1, 2, 2, 3, 3])
     
-    # --- 2. Fase de Entrenamiento y Visualización ---
-    print("--- FASE 1: ENTRENAMIENTO Y VISUALIZACIÓN ---")
-    red_entrenamiento = RedNeuronal(tamano_capas, activaciones)
+    X_transpuesto = X.T
     
-    epocas = 1200000 
-    tasa_aprendizaje = 0.1
-    
+    num_entradas = X_transpuesto.shape[1]
+    num_salidas = 4 
+
+    # --- 2. Definir la arquitectura de la red con Keras ---
+    modelo = Sequential([
+        # Cambiamos 'tanh' a 'relu'
+        Dense(5, activation='relu', input_shape=(num_entradas,)),
+        Dense(num_salidas, activation='softmax')
+    ])
+
+    # --- 3. Compilar el modelo ---
+    modelo.compile(optimizer='adam',
+                   loss='sparse_categorical_crossentropy',
+                   metrics=['accuracy'])
+
+    # --- 4. Entrenar la red ---
+    print("Iniciando el entrenamiento...")
     inicio_entrenamiento = time.time()
-    historial_costos = red_entrenamiento.entrenar(X, y, epocas, tasa_aprendizaje)
+    # Entrenamos por menos épocas, ya que el aprendizaje será mucho más rápido
+    historial = modelo.fit(X_transpuesto, y, epochs=50000, verbose=2) 
     fin_entrenamiento = time.time()
     tiempo_total = fin_entrenamiento - inicio_entrenamiento
+    
+    print("Entrenamiento finalizado.")
 
-    # --- 3. Guardar el modelo entrenado ---
-    ruta_modelo = "cerebro_ia.npz"
-    red_entrenamiento.guardar_modelo(ruta_modelo)
+    # --- 5. Evaluar y predecir ---
+    perdida, precision = modelo.evaluate(X_transpuesto, y, verbose=0)
+    print(f"\nPrecisión del modelo: {precision * 100:.2f}%")
 
-    # --- 4. Visualizar el progreso del entrenamiento ---
-    print("\nVisualizando el progreso del entrenamiento...")
-    plt.plot(historial_costos)
+    predicciones = modelo.predict(X_transpuesto, verbose=0)
+    predicciones_clase = np.argmax(predicciones, axis=1)
+
+    print("\nSalida esperada (y):\n", y)
+    print("\nPredicciones del modelo (índices de clase):\n", predicciones_clase)
+    
+    # --- 6. Guardar los resultados ---
+    guardar_resultados("resultados.txt", y, predicciones_clase, precision, tiempo_total)
+    
+    # Guardar el modelo entrenado
+    modelo.save('cerebro_ia_keras.h5')
+
+    # --- 7. Visualizar el historial de pérdida ---
+    plt.plot(historial.history['loss'])
     plt.ylabel('Pérdida')
-    plt.xlabel('Épocas (x10,000)')
-    plt.title('Pérdida durante el entrenamiento')
+    plt.xlabel('Épocas')
+    plt.title('Pérdida durante el entrenamiento (Keras)')
     plt.show()
 
-    # --- 5. Fase de Carga y Predicción ---
-    print("\n--- FASE 2: CARGA Y PREDICCIÓN ---")
-    
-    red_prueba = RedNeuronal(tamano_capas, activaciones)
-    red_prueba.cargar_modelo(ruta_modelo)
-    
-    predicciones = red_prueba.predecir(X)
-    
-    print("\nSalida esperada (y):")
-    print(y)
-    print("\nPredicciones del modelo (predecir(X)):")
-    print(predicciones)
-
-    # --- 6. Evaluar la precisión y guardar los resultados ---
-    precision = red_prueba.evaluar_precision(X, y)
-    print(f"\nPrecisión del modelo: {precision:.2f}")
-
-    guardar_resultados("resultados.txt", y, predicciones, precision, tiempo_total)
-
-    # Llamamos a la función de sonido para que avise al terminar
-    reproducir_sonido_finalizacion()
-    
 if __name__ == "__main__":
     main()
